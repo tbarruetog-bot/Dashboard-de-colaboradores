@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard RRHH</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#f7f7fb;margin:20px}
+h1{text-align:center;color:#7a3db8}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+select{padding:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.card{background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 6px #ccc}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px}
+th{background:#eee;position:sticky;top:0}
+.wrap{max-height:400px;overflow:auto}
+</style>
+</head>
+<body>
+<h1>Dashboard Inteligente de RRHH</h1>
+<div class="controls">
+<select id="area"><option>Todos</option></select>
+<select id="contrato"><option>Todos</option></select>
+<select id="modalidad"><option>Todos</option></select>
+</div>
+<div class="grid">
+<div class="card"><canvas id="bar"></canvas></div>
+<div class="card"><canvas id="pie"></canvas></div>
+</div>
+<div class="card wrap">
+<table id="tabla">
+<thead><tr><th>Nombre</th><th>Edad</th><th>Sexo</th><th>Área</th><th>Contrato</th><th>Modalidad</th><th>Sueldo</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<script>
+const names=["Valeria","José","Luis","Sofía","Ana","Carlos","María","Jorge","Elena","Pedro"];
+const ap=["Vargas","Torres","Ramírez","Pérez","Huamán","Lopez","Ruiz","Gomez","Diaz","Martinez"];
+const areas=["Atención al Cliente","Producción","Marketing","Logística","Administración"];
+const contratos=["CAS","Plazo fijo","Indeterminado"];
+const mods=["Híbrido","Presencial"];
+const data=[];
+for(let i=0;i<100;i++){
+ data.push({
+  nombre:names[i%10]+" "+ap[i%10],
+  edad:22+i%38,
+  sexo:i%2?"F":"M",
+  area:areas[i%5],
+  contrato:contratos[i%3],
+  modalidad:mods[i%2],
+  sueldo:2500+i*50
+ });
+}
+function fill(id,vals){
+ const s=document.getElementById(id);
+ [...new Set(vals)].forEach(v=>{let o=document.createElement("option");o.text=o.value=v;s.add(o);});
+}
+fill("area",data.map(x=>x.area));
+fill("contrato",data.map(x=>x.contrato));
+fill("modalidad",data.map(x=>x.modalidad));
+let bar,pie;
+function render(){
+ const a=area.value,c=contrato.value,m=modalidad.value;
+ const f=data.filter(x=>(a=="Todos"||x.area==a)&&(c=="Todos"||x.contrato==c)&&(m=="Todos"||x.modalidad==m));
+ const tb=document.querySelector("#tabla tbody");tb.innerHTML="";
+ f.forEach(r=>tb.innerHTML+=`<tr><td>${r.nombre}</td><td>${r.edad}</td><td>${r.sexo}</td><td>${r.area}</td><td>${r.contrato}</td><td>${r.modalidad}</td><td>${r.sueldo}</td></tr>`);
+ const sums={};f.forEach(r=>sums[r.area]=(sums[r.area]||0)+r.sueldo);
+ if(bar)bar.destroy();
+ bar=new Chart(bar=document.getElementById("bar"),{type:"bar",data:{labels:Object.keys(sums),datasets:[{label:"Sueldo",data:Object.values(sums)}]}});
+ const counts={};f.forEach(r=>counts[r.contrato]=(counts[r.contrato]||0)+1);
+ if(pie)pie.destroy();
+ pie=new Chart(document.getElementById("pie"),{type:"pie",data:{labels:Object.keys(counts),datasets:[{data:Object.values(counts)}]}});
+}
+area.onchange=contrato.onchange=modalidad.onchange=render;
+render();
+</script>
+</body>
+</html>
